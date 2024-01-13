@@ -2,7 +2,7 @@ from tokentype import TokenType
 
 class Token:
     def __init__(self, tokentype, lexeme, literal, line):
-        self.type = tokentype
+        self.tokentype = tokentype
         self.lexeme = lexeme 
         self.literal = literal 
         self.line = line 

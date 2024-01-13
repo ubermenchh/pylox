@@ -1,15 +1,36 @@
-from token import *
+from Token import *
 from tokentype import TokenType
 from Expr import *
-from lox import *
+from error_handler import ErrorHandler
+from Stmt import *
 
 class Parser:
-    def __init__(self, tokens):
+    class ParseError(RuntimeError):
+        def __init__(self, message):
+            super().__init__(message)
+
+    def __init__(self, tokens, error_handler):
+        self.error_handler = error_handler
+
         self.tokens = tokens 
         self._current = 0
 
     def expression(self): 
         return self.equality()
+
+    def statement(self):
+        if (self.match(TokenType.PRINT)): return self.print_statement()
+        return self.expression_statement()
+
+    def print_statement(self):
+        value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+
+    def expression_statement(self):
+        expr = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Expression(expr)
 
     def equality(self):
         expr = self.comparison()
@@ -27,7 +48,7 @@ class Parser:
         while self.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
             operator = self.previous()
             right = self.term()
-            expr = Expr.Binary(expr, operator, right)
+            expr = Binary(expr, operator, right)
         
         return expr 
 
@@ -37,7 +58,7 @@ class Parser:
         while self.match(TokenType.MINUS, TokenType.PLUS):
             operator = self.previous()
             right = self.factor()
-            expr = Expr.Binary(expr, operator, right)
+            expr = Binary(expr, operator, right)
         return expr 
 
     def factor(self):
@@ -46,7 +67,7 @@ class Parser:
         while self.match(TokenType.SLASH, TokenType.STAR):
             operator = self.previous()
             right = self.unary()
-            expr = Expr.Binary(expr, operator, right)
+            expr = Binary(expr, operator, right)
 
         return expr 
 
@@ -54,47 +75,53 @@ class Parser:
         if (self.match(TokenType.BANG, TokenType.MINUS)):
             operator = self.previous()
             right = self.unary()
-            return Expr.Unary(operator, right)
+            return Unary(operator, right)
 
         return self.primary()
 
     def primary(self):
         if (self.match(TokenType.FALSE)):
-            return Expr.Literal(False)
+            return Literal(False)
         if (self.match(TokenType.TRUE)):
-            return Expr.Literal(True)
+            return Literal(True)
         if (self.match(TokenType.NIL)):
-            return Expr.Literal(None)
+            return Literal(None)
 
         if (self.match(TokenType.NUMBER, TokenType.STRING)):
-            return Expr.Literal(self.previous().literal)
+            return Literal(self.previous().literal)
 
         if (self.match(TokenType.LEFT_PAREN)):
             expr = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
-            return Expr.Grouping(expr)
+            return Grouping(expr)
 
     def match(self, *types):
         for _type in types:
-            if (check(_type)):
+            if (self.check(_type)):
                 self.advance()
                 return True 
 
-        return False 
+        return False
+
+    def parse(self):
+        statements = []
+        while not self._isAtEnd():
+            statements.append(self.statement())
+        return statements
 
     def consume(self, _type, message):
         if (self.check(_type)): return self.advance()
         raise self.error(self.peek(), message)
 
     def check(self, _type):
-        if self.isAtEnd(): return False 
+        if self._isAtEnd(): return False 
         return self.peek().tokentype == _type 
 
     def advance(self):
-        if not self.isAtEnd(): self._current += 1
+        if not self._isAtEnd(): self._current += 1
         return self.previous()
 
-    def isAtEnd(self):
+    def _isAtEnd(self):
         return self.peek().tokentype == TokenType.EOF 
 
     def peek(self):
@@ -104,5 +131,5 @@ class Parser:
         return self.tokens[self._current-1]
 
     def error(self, token, message):
-        Lox.error(token, message)
+        self.error_handler.error(token, message)
         return Parser.ParseError("")

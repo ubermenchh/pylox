@@ -14,7 +14,18 @@ def main():
                 "Binary | left, operator, right",
                 "Grouping | expression",
                 "Literal | value",
-                "Unary | operator, right"
+                "Unary | operator, right",
+                "Variable | name"
+                ]
+            )
+
+    define_ast(
+            output_dir,
+            "Stmt",
+            [
+                "Expression | expression",
+                "Print | expression",
+                "Var | name, initializer"
                 ]
             )
 
@@ -57,7 +68,7 @@ def define_visitor(output_dir, base_name, types):
     for type in types:
         type_name = type.split("|")[0].strip()
         output_file.write(f"    @abstractmethod\n")
-        output_file.write(f"    def visit{type_name}{base_name}(self, {base_name.lower()}:  {type_name}):\n")
+        output_file.write(f"    def visit_{type_name.lower()}_{base_name.lower()}(self, {base_name.lower()}:  {type_name}):\n")
         output_file.write(f"        pass\n\n")
 
     output_file.close()
@@ -78,7 +89,7 @@ def define_type(output_file, base_name, class_name, field_list):
 
     # Visitor Pattern
     output_file.write(f"    def accept(self, visitor):\n")
-    output_file.write(f"        return visitor.visit{class_name}{base_name}(self)\n")
+    output_file.write(f"        return visitor.visit_{class_name.lower()}_{base_name.lower()}(self)\n")
 
 if __name__=="__main__":
     main()

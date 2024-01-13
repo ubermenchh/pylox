@@ -1,22 +1,18 @@
-from Expr import *
+from Stmt import *
 from abc import ABC, abstractmethod
 from token import *
 
 
 class Visitor(ABC):
     @abstractmethod
-    def visitBinaryExpr(self, expr:  Binary):
+    def visit_expression_stmt(self, stmt:  Expression):
         pass
 
     @abstractmethod
-    def visitGroupingExpr(self, expr:  Grouping):
+    def visit_print_stmt(self, stmt:  Print):
         pass
 
     @abstractmethod
-    def visitLiteralExpr(self, expr:  Literal):
-        pass
-
-    @abstractmethod
-    def visitUnaryExpr(self, expr:  Unary):
+    def visit_var_stmt(self, stmt:  Var):
         pass
 

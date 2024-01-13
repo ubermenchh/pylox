@@ -1,26 +1,35 @@
-from Expr import *
+from Expr import Expr
 from visitor import *
-from token import *
-from tokentype import *
+from Token import *
+from tokentype import TokenType
 
 class AstPrinter(Visitor):
-    def print(expr):
+    def __init__(self):
+        pass
+
+    def print(self, expr):
         return expr.accept(self)
 
-    def visit_binary_expr(expr):
+    def visit_binary_expr(self, expr):
         return self.parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
-    def visit_grouping_expr(expr):
+    def visit_grouping_expr(self, expr):
         return self.parenthesize("group", expr.expression)
 
-    def visit_literal_expr(expr):
+    def visit_literal_expr(self, expr):
         if (expr.value == None): return "nil"
         return str(expr.value)
 
-    def visit_unary_expr(expr):
+    def visit_unary_expr(self, expr):
         return self.parenthesize(expr.operator.lexeme, expr.right)
 
-    def parenthesize(name, exprs):
+    def visit_print_stmt(self, stmt):
+        return None 
+
+    def visit_expression_stmt(self, stmt):
+        return None
+
+    def parenthesize(self, name, exprs):
         res = f"({name}"
         for expr in exprs:
             res += f" {expr.accept(self)}"
