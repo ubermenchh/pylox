@@ -24,31 +24,49 @@ class Parser:
                 return self.var_declaration()
             if self.match([TokenType.FUN]):
                 return self.function("function")
+            if self.match([TokenType.CLASS]):
+                return self.class_declaration()
+
             return self.statement()
         except Parser.ParseError as e:
             self.synchronize()
             return None
 
+    def class_declaration(self):
+        name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        
+        superclass = None
+        if self.match([TokenType.LESS]):
+            self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = Variable(self.previous())
+
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+
+        methods = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self._isAtEnd():
+            methods.append(self.function("method"))
+
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+
+        return Class(name, superclass, methods)
+
     def function(self, kind):
         name = self.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.")
-        self.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.")
-        parameters = []
+        self.consume(TokenType.LEFT_PAREN, f"Expected '(' after {kind} name.")
 
+        parameters = []
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
-                if len(parameters) > 255:
-                    self.error(self.peek(), f"Don't wanna have more than 255 parameters to a {kind}")
+                if len(parameters) >= 255:
+                    self.error(self.peek(), "Parse Error", "Can't have more than 255 parameters in {kind} {name.lexeme}")
+                parameters.append(self.consume(TokenType.IDENTIFIER, "Expected parameter name."))
+                if not self.match(TokenType.COMMA):
+                    break 
 
-                parameters.append(self.consume(TokenType.IDENTIFIER, "Expected identifier."))
-
-                if not self.match([TokenType.COMMA]):
-                    break
-
-            self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
-
-            self.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.")
-            body = self.block()
-            return Function(name, parameters, body)
+        self.consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters.")
+        self.consume(TokenType.LEFT_BRACE, f"Expected '{{' before {kind} body.")
+        body = self.block()
+        return Function(name, parameters, body)
 
     def statement(self):
         if self.match([TokenType.PRINT]):
@@ -61,7 +79,6 @@ class Parser:
             return self.for_statement()
         if self.match([TokenType.RETURN]):
             return self.return_statement()
-
         if self.match([TokenType.LEFT_BRACE]):
             return Block(self.block())
 
@@ -108,8 +125,10 @@ class Parser:
 
             if isinstance(expr, Variable):
                 return Assign(expr.name, value)
-
-            self.error(equals, "Invalid assignment target.")
+            elif isinstance(expr, Get):
+                return Set(expr.object, expr.name, value)
+            else:
+                self.error(equals.token, "Invalid assignment target.")
 
         return expr
 
@@ -136,7 +155,7 @@ class Parser:
     def block(self):
         statements = []
 
-        while (not self.check(TokenType.RIGHT_BRACE) and not self._isAtEnd()):
+        while not self.check(TokenType.RIGHT_BRACE) and not self._isAtEnd():
             statements.append(self.declaration())
 
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
@@ -253,6 +272,9 @@ class Parser:
         while True:
             if self.match([TokenType.LEFT_PAREN]):
                 expr = self.finish_call(expr)
+            elif self.match([TokenType.DOT]):
+                name = self.consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                expr = Get(expr, name)
             else:
                 break 
 
@@ -286,6 +308,15 @@ class Parser:
 
         if self.match([TokenType.NUMBER, TokenType.STRING]):
             return Literal(self.previous().literal)
+
+        if self.match([TokenType.SUPER]):
+            keyword = self.previous()
+            self.consume(TokenType.DOT, "Expect '.' after 'super'.")
+            method = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Super(keyword, method)
+
+        if self.match([TokenType.SELF]):
+            return Self.previous()
 
         if self.match([TokenType.IDENTIFIER]):
             return Variable(self.previous())

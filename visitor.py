@@ -36,3 +36,7 @@ class Visitor(ABC):
     def visit_return_stmt(self, stmt:  Return):
         pass
 
+    @abstractmethod
+    def visit_class_stmt(self, stmt:  Class):
+        pass
+

@@ -7,6 +7,7 @@ from ast_printer import AstPrinter
 from runtime_error import RuntimeError_
 from interpreter import Interpreter
 from error_handler import ErrorHandler
+from resolver import *
 
 
 class Lox:
@@ -20,16 +21,16 @@ class Lox:
 
             self.run(data)
 
-            if self.error_handler.had_error:
-                sys.exit(65)
-            if self.error_handler.had_runtime_error:
-                sys.exit(70)
+        if self.error_handler.had_error:
+            sys.exit(65)
+        if self.error_handler.had_runtime_error:
+            sys.exit(70)
 
     def run_prompt(self):
         try:
+            print(">>>>> PLox Interactive Shell <<<<<")
             while True:
-                print("> ", end="")
-                self.run(input())
+                self.run(input("> "))
 
                 self.error_handler.had_error = False
                 self.error_handler.had_runtime_error = False
@@ -45,6 +46,10 @@ class Lox:
 
         if self.error_handler.had_error or self.error_handler.had_runtime_error:
             return
+
+        resolver = Resolver(self.interpreter)
+        resolver.resolve(statements)
+
 
         self.interpreter.interpret(statements)
 

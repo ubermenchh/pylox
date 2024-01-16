@@ -11,10 +11,13 @@ class ErrorHandler:
         self.had_runtime_error = False
 
     def error(self, token, message):
-        if token.tokentype == TokenType.EOF:
-            self.report(token.line, "", message)
+        if isinstance(token, Token):
+            if token.tokentype == TokenType.EOF:
+                self.report(token.line, "", message)
+            else:
+                self.report(token.line, " at '" + token.lexeme + "'", message)
         else:
-            self.report(token.line, " at '" + token.lexeme + "'", message)
+            self.report(token, "", message)
 
     def runtime_error(self, error):
         print(f"[Line {error.token.line}] --> {error.message}")

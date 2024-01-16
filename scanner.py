@@ -127,13 +127,11 @@ class Scanner:
             return
 
     def identifier(self):
-        while self.peek().isalnum():
+        while self.peek().isalnum() and not self._isAtEnd():
             self.advance()
 
         text = self.source[self._start : self._current]
-        _type = None
-
-        if text in self.keywords.keys():
+        if text in self.keywords:
             _type = self.keywords[text]
         else:
             _type = TokenType.IDENTIFIER

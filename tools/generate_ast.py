@@ -20,7 +20,11 @@ def main():
             "Unary | operator, right",
             "Variable | name",
             "Call | callee, paren_loc, arguments",
-            "Grouping | expression"
+            "Grouping | expression",
+            "Get | object, name",
+            "Set | object, name, value",
+            "Self | keyword",
+            "Super | keyword, method"
         ],
     )
 
@@ -35,7 +39,8 @@ def main():
             "If | condition, then_branch, else_branch",
             "While | condition, body",
             "Function | name, params, body",
-            "Return | keyword, value"
+            "Return | keyword, value",
+            "Class | name, superclass, methods",
         ],
     )
 

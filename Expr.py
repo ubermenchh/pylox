@@ -74,3 +74,35 @@ class Grouping(Expr):
 
     def accept(self, visitor):
         return visitor.visit_grouping_expr(self)
+
+class Get(Expr):
+    def __init__(self, object, name):
+        self.object = object
+        self.name = name
+
+    def accept(self, visitor):
+        return visitor.visit_get_expr(self)
+
+class Set(Expr):
+    def __init__(self, object, name, value):
+        self.object = object
+        self.name = name
+        self.value = value
+
+    def accept(self, visitor):
+        return visitor.visit_set_expr(self)
+
+class Self(Expr):
+    def __init__(self, keyword):
+        self.keyword = keyword
+
+    def accept(self, visitor):
+        return visitor.visit_self_expr(self)
+
+class Super(Expr):
+    def __init__(self, keyword, method):
+        self.keyword = keyword
+        self.method = method
+
+    def accept(self, visitor):
+        return visitor.visit_super_expr(self)
