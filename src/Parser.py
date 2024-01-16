@@ -60,7 +60,7 @@ class Parser:
                 if len(parameters) >= 255:
                     self.error(self.peek(), "Parse Error", "Can't have more than 255 parameters in {kind} {name.lexeme}")
                 parameters.append(self.consume(TokenType.IDENTIFIER, "Expected parameter name."))
-                if not self.match(TokenType.COMMA):
+                if not self.match([TokenType.COMMA]):
                     break 
 
         self.consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters.")

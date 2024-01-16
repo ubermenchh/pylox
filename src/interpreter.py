@@ -160,7 +160,7 @@ class Interpreter(Visitor):
         if stmt.value is not None:
             value = self.evaluate(stmt.value)
 
-        raise Return(value)
+        raise Return_(value)
 
     def visit_class_stmt(self, stmt):
         superclass = None
